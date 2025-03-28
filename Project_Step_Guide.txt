@@ -1,0 +1,129 @@
+# 🚀 Project Setup Guide: StreamStonks
+
+This document provides a **step-by-step guide** to set up and run the **StreamStonks** project, a real-time stock market data pipeline using Kafka and AWS.
+
+---
+
+## 📦 Prerequisites
+
+- AWS account with access to EC2, S3, Glue, and Athena
+- A Linux-based EC2 instance (Amazon Linux 2 preferred)
+- Python 3.8+ installed
+- Basic familiarity with AWS CLI and SSH
+
+---
+
+## 🧱 Step-by-Step Setup
+
+### 1️⃣ Launch an EC2 Instance
+
+- Choose **Amazon Linux 2**
+- Allow inbound traffic on ports **22 (SSH)** and **9092 (Kafka)** in the Security Group
+- Connect via SSH
+
+---
+
+### 2️⃣ Install Java (Required for Kafka)
+
+```bash
+sudo yum install java-1.8.0
+java -version
+```
+
+---
+
+### 3️⃣ Download and Set Up Kafka
+
+```bash
+wget https://archive.apache.org/dist/kafka/3.3.1/kafka_2.12-3.3.1.tgz
+tar -xvf kafka_2.12-3.3.1.tgz
+cd kafka_2.12-3.3.1
+```
+
+---
+
+### 4️⃣ Configure Kafka with Public IP
+
+Edit the Kafka server config:
+```bash
+sudo nano config/server.properties
+```
+
+Change the line:
+```
+advertised.listeners=PLAINTEXT://<Your-EC2-Public-IP>:9092
+```
+
+---
+
+### 5️⃣ Start Zookeeper and Kafka
+
+```bash
+# Terminal 1
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+# Terminal 2
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+bin/kafka-server-start.sh config/server.properties
+```
+
+---
+
+### 6️⃣ Create Kafka Topic
+
+```bash
+bin/kafka-topics.sh --create --topic stock --bootstrap-server <EC2-Public-IP>:9092 --replication-factor 1 --partitions 1
+```
+
+---
+
+### 7️⃣ Upload Files to EC2
+
+Transfer the following files to your EC2 instance:
+- `Producer.ipynb`
+- `Consumer.ipynb`
+- `indexProcessed.csv`
+
+Use `scp` or any file transfer tool.
+
+---
+
+### 8️⃣ Run the Producer
+
+- Open `Producer.ipynb` in Jupyter or run using a script.
+- This reads data from `indexProcessed.csv` and sends it to the `stock` topic in Kafka.
+
+---
+
+### 9️⃣ Run the Consumer
+
+- Open `Consumer.ipynb`
+- It listens to the Kafka topic and writes incoming stock data to an S3 bucket using Boto3.
+
+---
+
+### 🔟 Set Up AWS Glue
+
+1. Go to AWS Glue
+2. Create a **crawler**
+   - Source: the S3 bucket used by the Consumer
+   - Target: AWS Glue Data Catalog
+3. Run the crawler to create a table
+
+---
+
+### 🔢 Query with Amazon Athena
+
+- Open Athena in AWS console
+- Use the created database and table
+- Run SQL queries like:
+```sql
+SELECT * FROM stock_data WHERE symbol = 'AAPL';
+```
+
+---
+
+## ✅ Done!
+
+You've now set up a fully functional real-time data pipeline using Kafka and AWS!
+
