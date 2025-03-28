@@ -30,7 +30,8 @@
 ## 🏗️ Architecture
 
 ```
-[CSV Dataset] --> [Python Stock Simulator (Producer)] --> [Kafka on EC2] --> [Consumer]
+[CSV Dataset
+or Real-time Stock Data] --> [Python Stock Simulator (Producer)] --> [Kafka on EC2] --> [Consumer]
     |                                                                  |
     └---> [Kafka Producer using Boto3]                    └---> [Amazon S3] --> [AWS Glue Crawler]
                                                                        ↓
